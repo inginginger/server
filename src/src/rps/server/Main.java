@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 
 public class Main {
@@ -11,18 +12,18 @@ public class Main {
     public static void main(String[] args) {
         ServerSocket socketListener = null;
         Socket client = null;
-        try{
+        try {
             socketListener = new ServerSocket(8189);
             System.out.println("Сервер активен. Ожидание подключения...");
-            client = socketListener.accept();
-            Scanner sc = new Scanner(client.getInputStream());
-            PrintWriter pw = new PrintWriter(client.getOutputStream());
-            while(true) {
-                String str = sc.nextLine();
-                if(str.equals("end")) break;
-                pw.println("Echo: " + str);
-                pw.flush();
+            while (true) {
+                while (client == null) {
+                    client = socketListener.accept();
+                }
+                new ClientThread(client); //Создаем новый поток, которому передаем сокет
             }
+        }catch (SocketException e){
+            System.out.println("Socket exception");
+            e.printStackTrace();
         } catch (IOException e) {
             System.out.println("Ошибка инициализации сервера");
         } finally {
